@@ -1,10 +1,13 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NutriGO-Core | Model test</title>
+  <title>NutriGO-Core</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+
   <style>
     body {
       max-width: 760px;
@@ -14,12 +17,14 @@
       background: #f6f8fb;
       color: #18212f;
     }
+
     main {
       background: white;
       border: 1px solid #dce3ec;
       border-radius: 16px;
       padding: 24px;
     }
+
     button {
       padding: 12px 18px;
       border: 0;
@@ -28,7 +33,26 @@
       color: white;
       font-size: 1rem;
       cursor: pointer;
+      margin: 5px 0;
     }
+
+    button:disabled {
+      opacity: 0.5;
+    }
+
+    input {
+      margin: 15px 0;
+    }
+
+    #preview {
+      width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin-top: 15px;
+      display: none;
+    }
+
     #status {
       margin-top: 18px;
       padding: 14px;
@@ -37,51 +61,126 @@
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
+
+    .section {
+      margin-top: 28px;
+      padding-top: 15px;
+      border-top: 1px solid #dce3ec;
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
 </head>
+
 <body>
   <main>
     <h1>NutriGO-Core</h1>
-    <p>Milestone 1: Load the food-recognition model in your browser.</p>
+    <p>AI-powered food recognition and nutrition estimation.</p>
 
-    <button id="loadButton">Load AI model</button>
-    <div id="status">Waiting to load the model.</div>
+    <div class="section">
+      <h2>1. Load AI model</h2>
+      <button id="loadButton">Load AI model</button>
+      <div id="modelStatus">Model not loaded.</div>
+    </div>
+
+    <div class="section">
+      <h2>2. Upload food photograph</h2>
+      <p>Select a photograph of your meal.</p>
+
+      <input
+        type="file"
+        id="imageInput"
+        accept="image/*"
+      >
+
+      <img id="preview" alt="Selected food photograph">
+
+      <div id="imageStatus">
+        No photograph selected.
+      </div>
+    </div>
+
   </main>
 
   <script>
-    const MODEL_PATH = "./models/food-segmentation/best.onnx";
-    const button = document.getElementById("loadButton");
-    const statusBox = document.getElementById("status");
+    const MODEL_PATH =
+      "./models/food-segmentation/best.onnx";
 
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      statusBox.textContent = "Loading model…";
+    let modelSession = null;
+    let imageUrl = null;
+
+    const loadButton =
+      document.getElementById("loadButton");
+
+    const modelStatus =
+      document.getElementById("modelStatus");
+
+    const imageInput =
+      document.getElementById("imageInput");
+
+    const preview =
+      document.getElementById("preview");
+
+    const imageStatus =
+      document.getElementById("imageStatus");
+
+    loadButton.addEventListener("click", async () => {
+      loadButton.disabled = true;
+      modelStatus.textContent = "Loading model...";
 
       try {
         if (!window.ort) {
-          throw new Error("ONNX Runtime did not load. Check your internet connection.");
+          throw new Error("ONNX Runtime failed to load.");
         }
 
         ort.env.wasm.numThreads = 1;
 
-        const session = await ort.InferenceSession.create(MODEL_PATH, {
-          executionProviders: ["wasm"],
-          graphOptimizationLevel: "all"
-        });
+        modelSession =
+          await ort.InferenceSession.create(
+            MODEL_PATH,
+            {
+              executionProviders: ["wasm"],
+              graphOptimizationLevel: "all"
+            }
+          );
 
-        statusBox.textContent =
-          "SUCCESS: model loaded in your browser.\n\n" +
-          "Input: " + session.inputNames[0] + "\n" +
-          "Outputs: " + session.outputNames.join(", ") +
-          "\n\nNext: run the model on a food photograph.";
+        modelStatus.textContent =
+          "SUCCESS: AI model loaded.\n" +
+          "Input: " + modelSession.inputNames[0] +
+          "\nOutputs: " +
+          modelSession.outputNames.join(", ");
+
       } catch (error) {
-        statusBox.textContent =
-          "MODEL LOAD FAILED\n\n" + (error.message || String(error));
-        console.error(error);
+        modelStatus.textContent =
+          "MODEL LOAD FAILED:\n" + error.message;
       } finally {
-        button.disabled = false;
+        loadButton.disabled = false;
       }
+    });
+
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files[0];
+
+      if (!file) return;
+
+      if (!file.type.startsWith("image/")) {
+        imageStatus.textContent =
+          "Please select a valid image.";
+        return;
+      }
+
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+
+      imageUrl = URL.createObjectURL(file);
+
+      preview.src = imageUrl;
+      preview.style.display = "block";
+
+      imageStatus.textContent =
+        "Photograph uploaded successfully!\n" +
+        "Filename: " + file.name +
+        "\nSize: " +
+        (file.size / 1024).toFixed(2) + " KB";
     });
   </script>
 </body>
