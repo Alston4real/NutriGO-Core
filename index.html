@@ -110,6 +110,28 @@
   <script>
     const MODEL_PATH =
       "./models/food-segmentation/best.onnx";
+    const CLASS_NAMES = [
+  "plate",
+  "rice",
+  "chicken",
+  "cucumber",
+  "egg",
+  "bean_sprouts",
+  "shrimp",
+  "sausage",
+  "noodles",
+  "sauce",
+  "pepper",
+  "fish",
+  "broccoli",
+  "lettuce",
+  "carrot",
+  "tomato",
+  "onion",
+  "potato",
+  "bread",
+  "other_ingredients"
+];
 
     let modelSession = null;
     let imageUrl = null;
@@ -270,11 +292,56 @@ async function runFoodInference() {
       [modelSession.inputNames[0]]: inputTensor
     });
 
-    const outputReport = Object.entries(outputs)
-      .map(([name, tensor]) => {
-        return name + ": [" + tensor.dims.join(", ") + "]";
-      })
-      .join("\n");
+    
+const predictionTensor = outputs[modelSession.outputNames[0]];
+const predictionData = predictionTensor.data;
+
+const numberOfCandidates = 8400;
+const numberOfClasses = CLASS_NAMES.length;
+
+const candidates = [];
+
+for (let i = 0; i < numberOfCandidates; i++) {
+  let bestClass = -1;
+  let bestConfidence = 0;
+
+  for (let c = 0; c < numberOfClasses; c++) {
+    const confidence =
+      predictionData[(4 + c) * numberOfCandidates + i];
+
+    if (confidence > bestConfidence) {
+      bestConfidence = confidence;
+      bestClass = c;
+    }
+  }
+
+  if (bestConfidence >= 0.25) {
+    candidates.push({
+      className: CLASS_NAMES[bestClass],
+      confidence: bestConfidence,
+      x: predictionData[i],
+      y: predictionData[numberOfCandidates + i],
+      width: predictionData[2 * numberOfCandidates + i],
+      height: predictionData[3 * numberOfCandidates + i]
+    });
+  }
+}
+
+candidates.sort((a, b) => b.confidence - a.confidence);
+
+const topPredictions = candidates.slice(0, 10);
+
+const predictionReport = topPredictions.length
+  ? topPredictions.map((item, index) =>
+      `${index + 1}. ${item.className} — ${(item.confidence * 100).toFixed(1)}%`
+    ).join("\n")
+  : "No predictions above 25% confidence.";
+
+inferenceStatus.textContent =
+  "RAW FOOD PREDICTIONS\n\n" +
+  predictionReport +
+  "\n\nCandidates above threshold: " + candidates.length;
+
 
     inferenceStatus.textContent =
       "INFERENCE SUCCESSFUL!\n\n" +
