@@ -359,6 +359,7 @@ function calculateIoU(a, b) {
 }
 
 candidates.sort((a, b) => b.confidence - a.confidence);
+    const candidatesAboveThreshold = candidates.length;
 
 const selectedPredictions = [];
 
@@ -388,7 +389,7 @@ const predictionReport = topPredictions.length
 inferenceStatus.textContent =
   "RAW FOOD PREDICTIONS\n\n" +
   predictionReport +
-  "\n\nCandidates above threshold: " + candidates.length;
+  "\n\nCandidates above threshold: " + candidatesAboveThreshold;
 
 
    
