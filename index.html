@@ -327,9 +327,57 @@ for (let i = 0; i < numberOfCandidates; i++) {
   }
 }
 
+
+function calculateIoU(a, b) {
+  const ax1 = a.x - a.width / 2;
+  const ay1 = a.y - a.height / 2;
+  const ax2 = a.x + a.width / 2;
+  const ay2 = a.y + a.height / 2;
+
+  const bx1 = b.x - b.width / 2;
+  const by1 = b.y - b.height / 2;
+  const bx2 = b.x + b.width / 2;
+  const by2 = b.y + b.height / 2;
+
+  const intersectionWidth = Math.max(
+    0, Math.min(ax2, bx2) - Math.max(ax1, bx1)
+  );
+
+  const intersectionHeight = Math.max(
+    0, Math.min(ay2, by2) - Math.max(ay1, by1)
+  );
+
+  const intersection =
+    intersectionWidth * intersectionHeight;
+
+  const areaA = a.width * a.height;
+  const areaB = b.width * b.height;
+
+  const union = areaA + areaB - intersection;
+
+  return union > 0 ? intersection / union : 0;
+}
+
 candidates.sort((a, b) => b.confidence - a.confidence);
 
-const topPredictions = candidates.slice(0, 10);
+const selectedPredictions = [];
+
+while (candidates.length > 0) {
+  const best = candidates.shift();
+
+  selectedPredictions.push(best);
+
+  for (let i = candidates.length - 1; i >= 0; i--) {
+    if (
+      candidates[i].className === best.className &&
+      calculateIoU(best, candidates[i]) > 0.45
+    ) {
+      candidates.splice(i, 1);
+    }
+  }
+}
+
+const topPredictions = selectedPredictions.slice(0, 10);
 
 const predictionReport = topPredictions.length
   ? topPredictions.map((item, index) =>
