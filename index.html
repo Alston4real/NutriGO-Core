@@ -147,14 +147,14 @@ const inferenceStatus =
 
         modelSession =
           await ort.InferenceSession.create(
-            runButton.disabled = !imageInput.files.length;
-        runButton.disabled = !modelSession;
             MODEL_PATH,
             {
               executionProviders: ["wasm"],
               graphOptimizationLevel: "all"
             }
           );
+
+runButton.disabled = !imageInput.files.length;
 
         modelStatus.textContent =
           "SUCCESS: AI model loaded.\n" +
@@ -195,6 +195,7 @@ const inferenceStatus =
         "Filename: " + file.name +
         "\nSize: " +
         (file.size / 1024).toFixed(2) + " KB";
+      runButton.disabled = !modelSession;
     });
     
 async function runFoodInference() {
