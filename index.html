@@ -343,13 +343,7 @@ inferenceStatus.textContent =
   "\n\nCandidates above threshold: " + candidates.length;
 
 
-    inferenceStatus.textContent =
-      "INFERENCE SUCCESSFUL!\n\n" +
-      "Original image: " +
-      image.width + " × " + image.height + "\n" +
-      "Model input: 640 × 640\n\n" +
-      "Model outputs:\n" + outputReport;
-
+   
   } catch (error) {
     inferenceStatus.textContent =
       "INFERENCE FAILED:\n" + error.message;
