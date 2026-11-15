@@ -92,6 +92,12 @@
       >
 
       <img id="preview" alt="Selected food photograph">
+      <canvas
+  id="segmentationCanvas"
+  width="640"
+  height="640"
+  style="display:none; width:100%; max-height:400px; margin-top:15px; border-radius:12px;"
+></canvas>
 
       <div id="imageStatus">
         No photograph selected.
@@ -387,6 +393,100 @@ while (candidates.length > 0) {
 }
 
 const topPredictions = selectedPredictions.slice(0, 10);
+
+const segmentationCanvas =
+  document.getElementById("segmentationCanvas");
+
+if (topPredictions.length > 0) {
+  const bestDetection = topPredictions[0];
+
+  const protoChannels = prototypeShape[1];
+  const protoHeight = prototypeShape[2];
+  const protoWidth = prototypeShape[3];
+
+  const protoCanvas = document.createElement("canvas");
+  protoCanvas.width = protoWidth;
+  protoCanvas.height = protoHeight;
+
+  const protoCtx = protoCanvas.getContext("2d");
+
+  const maskImage = protoCtx.createImageData(
+    protoWidth,
+    protoHeight
+  );
+
+  for (let y = 0; y < protoHeight; y++) {
+    for (let x = 0; x < protoWidth; x++) {
+      const pixelIndex = y * protoWidth + x;
+
+      let maskLogit = 0;
+
+      for (let k = 0; k < protoChannels; k++) {
+        maskLogit +=
+          bestDetection.maskCoefficients[k] *
+          maskPrototypeData[
+            k * protoHeight * protoWidth + pixelIndex
+          ];
+      }
+
+      const probability =
+        1 / (1 + Math.exp(-maskLogit));
+
+      const centerX = (x + 0.5) * 640 / protoWidth;
+      const centerY = (y + 0.5) * 640 / protoHeight;
+
+      const left =
+        bestDetection.x - bestDetection.width / 2;
+      const right =
+        bestDetection.x + bestDetection.width / 2;
+      const top =
+        bestDetection.y - bestDetection.height / 2;
+      const bottom =
+        bestDetection.y + bestDetection.height / 2;
+
+      const insideBox =
+        centerX >= left &&
+        centerX <= right &&
+        centerY >= top &&
+        centerY <= bottom;
+
+      const offset = pixelIndex * 4;
+
+      if (probability > 0.5 && insideBox) {
+        maskImage.data[offset] = 0;
+        maskImage.data[offset + 1] = 255;
+        maskImage.data[offset + 2] = 0;
+        maskImage.data[offset + 3] = 110;
+      }
+    }
+  }
+
+  protoCtx.putImageData(maskImage, 0, 0);
+
+  segmentationCanvas.width = 640;
+  segmentationCanvas.height = 640;
+
+  const segmentationCtx =
+    segmentationCanvas.getContext("2d");
+
+  segmentationCtx.drawImage(canvas, 0, 0);
+
+  segmentationCtx.imageSmoothingEnabled = false;
+
+  segmentationCtx.drawImage(
+    protoCanvas,
+    0,
+    0,
+    640,
+    640
+  );
+
+  segmentationCanvas.style.display = "block";
+
+} else {
+  segmentationCanvas.style.display = "none";
+}
+
 
 const predictionReport = topPredictions.length
   ? topPredictions.map((item, index) =>
