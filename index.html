@@ -295,6 +295,9 @@ async function runFoodInference() {
     
 const predictionTensor = outputs[modelSession.outputNames[0]];
 const predictionData = predictionTensor.data;
+const maskPrototypeTensor = outputs[modelSession.outputNames[1]];
+const maskPrototypeData = maskPrototypeTensor.data;
+const prototypeShape = maskPrototypeTensor.dims;
 
 const numberOfCandidates = 8400;
 const numberOfClasses = CLASS_NAMES.length;
@@ -317,13 +320,18 @@ for (let i = 0; i < numberOfCandidates; i++) {
 
   if (bestConfidence >= 0.25) {
     candidates.push({
-      className: CLASS_NAMES[bestClass],
-      confidence: bestConfidence,
-      x: predictionData[i],
-      y: predictionData[numberOfCandidates + i],
-      width: predictionData[2 * numberOfCandidates + i],
-      height: predictionData[3 * numberOfCandidates + i]
-    });
+  className: CLASS_NAMES[bestClass],
+  confidence: bestConfidence,
+  x: predictionData[i],
+  y: predictionData[numberOfCandidates + i],
+  width: predictionData[2 * numberOfCandidates + i],
+  height: predictionData[3 * numberOfCandidates + i],
+
+  maskCoefficients: Array.from(
+    { length: 32 },
+    (_, k) => predictionData[(24 + k) * numberOfCandidates + i]
+  )
+});
   }
 }
 
