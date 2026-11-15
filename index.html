@@ -145,6 +145,7 @@
 
     let modelSession = null;
     let imageUrl = null;
+    let latestMaskCanvas = null;
 
     const loadButton =
       document.getElementById("loadButton");
@@ -165,6 +166,19 @@
 
 const inferenceStatus =
   document.getElementById("inferenceStatus");
+const downloadMaskButton =
+  document.getElementById("downloadMaskButton");
+
+downloadMaskButton.addEventListener("click", () => {
+  if (!latestMaskCanvas) return;
+
+  const link = document.createElement("a");
+
+  link.href = latestMaskCanvas.toDataURL("image/png");
+  link.download = "nutrigo-segmentation-mask.png";
+
+  link.click();
+});
 
     loadButton.addEventListener("click", async () => {
       loadButton.disabled = true;
@@ -475,6 +489,8 @@ maskAreaReport =
   "\nMask pixels: " + maskPixelCount +
   "\nMask grid coverage: " + maskCoverage.toFixed(2) + "%";
   protoCtx.putImageData(maskImage, 0, 0);
+  latestMaskCanvas = protoCanvas;
+downloadMaskButton.disabled = false;
 
   segmentationCanvas.width = 640;
   segmentationCanvas.height = 640;
@@ -497,6 +513,8 @@ maskAreaReport =
 
 } else {
   segmentationCanvas.style.display = "none";
+  latestMaskCanvas = null;
+  downloadMaskButton.disabled = true;
 }
 
 
