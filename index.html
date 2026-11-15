@@ -396,6 +396,7 @@ const topPredictions = selectedPredictions.slice(0, 10);
 
 const segmentationCanvas =
   document.getElementById("segmentationCanvas");
+    let maskAreaReport = "";
 
 if (topPredictions.length > 0) {
   const bestDetection = topPredictions[0];
@@ -463,6 +464,12 @@ if (topPredictions.length > 0) {
     }
   }
 
+  const maskCoverage =
+  (maskPixelCount / (protoWidth * protoHeight)) * 100;
+
+maskAreaReport =
+  "\nMask pixels: " + maskPixelCount +
+  "\nMask grid coverage: " + maskCoverage.toFixed(2) + "%";
   protoCtx.putImageData(maskImage, 0, 0);
 
   segmentationCanvas.width = 640;
@@ -498,7 +505,8 @@ const predictionReport = topPredictions.length
 inferenceStatus.textContent =
   "RAW FOOD PREDICTIONS\n\n" +
   predictionReport +
-  "\n\nCandidates above threshold: " + candidatesAboveThreshold;
+  "\n\nCandidates above threshold: " + candidatesAboveThreshold +
+maskAreaReport;
 
 
    
