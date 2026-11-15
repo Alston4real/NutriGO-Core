@@ -414,6 +414,7 @@ if (topPredictions.length > 0) {
     protoWidth,
     protoHeight
   );
+  let maskPixelCount = 0;
 
   for (let y = 0; y < protoHeight; y++) {
     for (let x = 0; x < protoWidth; x++) {
@@ -453,6 +454,7 @@ if (topPredictions.length > 0) {
       const offset = pixelIndex * 4;
 
       if (probability > 0.5 && insideBox) {
+        maskPixelCount++;
         maskImage.data[offset] = 0;
         maskImage.data[offset + 1] = 255;
         maskImage.data[offset + 2] = 0;
