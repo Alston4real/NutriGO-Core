@@ -1,1 +1,53 @@
 
+/**
+ * NutriGO Camera Calibration
+ * Converts image pixel measurements into real-world dimensions.
+ */
+
+export function calculatePixelScale(referencePixels, realWorldMm) {
+  if (referencePixels <= 0 || realWorldMm <= 0) {
+    throw new Error("Measurements must be greater than zero.");
+  }
+
+  return realWorldMm / referencePixels;
+}
+
+export function pixelsToMillimetres(pixels, scaleMmPerPixel) {
+  if (pixels < 0 || scaleMmPerPixel <= 0) {
+    throw new Error("Invalid pixel measurement or scale.");
+  }
+
+  return pixels * scaleMmPerPixel;
+}
+
+export function calculateReferenceScale(
+  referenceWidthPixels,
+  referenceHeightPixels,
+  realWidthMm,
+  realHeightMm
+) {
+  return {
+    horizontal: calculatePixelScale(
+      referenceWidthPixels,
+      realWidthMm
+    ),
+    vertical: calculatePixelScale(
+      referenceHeightPixels,
+      realHeightMm
+    )
+  };
+}
+
+export function calculateAreaCm2(
+  maskPixelCount,
+  scaleMmPerPixel
+) {
+  if (maskPixelCount < 0 || scaleMmPerPixel <= 0) {
+    throw new Error("Invalid area measurements.");
+  }
+
+  const areaMm2 =
+    maskPixelCount * scaleMmPerPixel ** 2;
+
+  return areaMm2 / 100;
+}
