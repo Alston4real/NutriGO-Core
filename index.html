@@ -220,6 +220,11 @@ runButton.disabled = !imageInput.files.length;
       const file = imageInput.files[0];
 
       if (!file) return;
+      
+      // Clear the previous photograph's segmentation mask.
+      latestMaskCanvas = null;
+      downloadMaskButton.disabled = true;
+      document.getElementById("segmentationCanvas").style.display = "none";
 
       if (!file.type.startsWith("image/")) {
         imageStatus.textContent =
