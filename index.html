@@ -523,6 +523,130 @@ downloadMaskButton.disabled = false;
 }
 
 
+if (topPredictions.length > 0) {
+  const protoChannels = prototypeShape[1];
+  const protoHeight = prototypeShape[2];
+  const protoWidth = prototypeShape[3];
+
+  const protoCanvas = document.createElement("canvas");
+  protoCanvas.width = protoWidth;
+  protoCanvas.height = protoHeight;
+
+  const protoCtx = protoCanvas.getContext("2d");
+  const maskImage = protoCtx.createImageData(
+    protoWidth,
+    protoHeight
+  );
+
+  let maskPixelCount = 0;
+
+  // Different colours help distinguish detected food items.
+  const maskColors = [
+    [0, 255, 0],
+    [0, 150, 255],
+    [255, 165, 0],
+    [200, 0, 255],
+    [255, 80, 120],
+    [0, 200, 180],
+    [255, 220, 0],
+    [120, 100, 255],
+    [255, 120, 0],
+    [100, 220, 100]
+  ];
+
+  topPredictions.forEach((detection, detectionIndex) => {
+    const color = maskColors[
+      detectionIndex % maskColors.length
+    ];
+
+    const left = detection.x - detection.width / 2;
+    const right = detection.x + detection.width / 2;
+    const top = detection.y - detection.height / 2;
+    const bottom = detection.y + detection.height / 2;
+
+    for (let y = 0; y < protoHeight; y++) {
+      for (let x = 0; x < protoWidth; x++) {
+        const pixelIndex = y * protoWidth + x;
+
+        let maskLogit = 0;
+
+        for (let k = 0; k < protoChannels; k++) {
+          maskLogit +=
+            detection.maskCoefficients[k] *
+            maskPrototypeData[
+              k * protoHeight * protoWidth + pixelIndex
+            ];
+        }
+
+        const probability =
+          1 / (1 + Math.exp(-maskLogit));
+
+        const centerX = (x + 0.5) * 640 / protoWidth;
+        const centerY = (y + 0.5) * 640 / protoHeight;
+
+        const insideBox =
+          centerX >= left &&
+          centerX <= right &&
+          centerY >= top &&
+          centerY <= bottom;
+
+        const offset = pixelIndex * 4;
+
+        if (
+          probability > 0.5 &&
+          insideBox &&
+          maskImage.data[offset + 3] === 0
+        ) {
+          maskPixelCount++;
+
+          maskImage.data[offset] = color[0];
+          maskImage.data[offset + 1] = color[1];
+          maskImage.data[offset + 2] = color[2];
+          maskImage.data[offset + 3] = 150;
+        }
+      }
+    }
+  });
+
+  const maskCoverage =
+    (maskPixelCount / (protoWidth * protoHeight)) * 100;
+
+  maskAreaReport =
+    "\nObjects segmented: " + topPredictions.length +
+    "\nCombined mask pixels: " + maskPixelCount +
+    "\nCombined mask coverage: " +
+    maskCoverage.toFixed(2) + "%";
+
+  protoCtx.putImageData(maskImage, 0, 0);
+
+  latestMaskCanvas = protoCanvas;
+  downloadMaskButton.disabled = false;
+
+  segmentationCanvas.width = 640;
+  segmentationCanvas.height = 640;
+
+  const segmentationCtx =
+    segmentationCanvas.getContext("2d");
+
+  segmentationCtx.drawImage(canvas, 0, 0);
+
+  segmentationCtx.drawImage(
+    protoCanvas,
+    0,
+    0,
+    640,
+    640
+  );
+
+  segmentationCanvas.style.display = "block";
+
+} else {
+  segmentationCanvas.style.display = "none";
+  latestMaskCanvas = null;
+  downloadMaskButton.disabled = true;
+}
+
+    
 const predictionReport = topPredictions.length
   ? topPredictions.map((item, index) =>
       `${index + 1}. ${item.className} — ${(item.confidence * 100).toFixed(1)}%`
