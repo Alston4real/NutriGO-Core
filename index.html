@@ -422,6 +422,11 @@ const segmentationCanvas =
     let maskAreaReport = "";
 
 if (topPredictions.length > 0) {
+  const {
+  createObjectMaskRecord
+  } = await import("./src/inference/object-masks.js");
+
+  const individualObjectMasks = [];
   const protoChannels = prototypeShape[1];
   const protoHeight = prototypeShape[2];
   const protoWidth = prototypeShape[3];
@@ -453,58 +458,75 @@ if (topPredictions.length > 0) {
   ];
 
   topPredictions.forEach((detection, detectionIndex) => {
-    const color = maskColors[
-      detectionIndex % maskColors.length
-    ];
+  const color = maskColors[
+    detectionIndex % maskColors.length
+  ];
 
-    const left = detection.x - detection.width / 2;
-    const right = detection.x + detection.width / 2;
-    const top = detection.y - detection.height / 2;
-    const bottom = detection.y + detection.height / 2;
+  const left = detection.x - detection.width / 2;
+  const right = detection.x + detection.width / 2;
+  const top = detection.y - detection.height / 2;
+  const bottom = detection.y + detection.height / 2;
 
-    for (let y = 0; y < protoHeight; y++) {
-      for (let x = 0; x < protoWidth; x++) {
-        const pixelIndex = y * protoWidth + x;
+  const probabilities = new Float32Array(
+    protoWidth * protoHeight
+  );
 
-        let maskLogit = 0;
+  for (let y = 0; y < protoHeight; y++) {
+    for (let x = 0; x < protoWidth; x++) {
+      const pixelIndex = y * protoWidth + x;
 
-        for (let k = 0; k < protoChannels; k++) {
-          maskLogit +=
-            detection.maskCoefficients[k] *
-            maskPrototypeData[
-              k * protoHeight * protoWidth + pixelIndex
-            ];
-        }
+      let maskLogit = 0;
 
-        const probability =
-          1 / (1 + Math.exp(-maskLogit));
+      for (let k = 0; k < protoChannels; k++) {
+        maskLogit +=
+          detection.maskCoefficients[k] *
+          maskPrototypeData[
+            k * protoHeight * protoWidth + pixelIndex
+          ];
+      }
 
-        const centerX = (x + 0.5) * 640 / protoWidth;
-        const centerY = (y + 0.5) * 640 / protoHeight;
+      const probability =
+        1 / (1 + Math.exp(-maskLogit));
 
-        const insideBox =
-          centerX >= left &&
-          centerX <= right &&
-          centerY >= top &&
-          centerY <= bottom;
+      const centerX = (x + 0.5) * 640 / protoWidth;
+      const centerY = (y + 0.5) * 640 / protoHeight;
 
-        const offset = pixelIndex * 4;
+      const insideBox =
+        centerX >= left &&
+        centerX <= right &&
+        centerY >= top &&
+        centerY <= bottom;
 
-        if (
-          probability > 0.5 &&
-          insideBox &&
-          maskImage.data[offset + 3] === 0
-        ) {
-          maskPixelCount++;
+      if (insideBox) {
+        probabilities[pixelIndex] = probability;
+      }
 
-          maskImage.data[offset] = color[0];
-          maskImage.data[offset + 1] = color[1];
-          maskImage.data[offset + 2] = color[2];
-          maskImage.data[offset + 3] = 150;
-        }
+      const offset = pixelIndex * 4;
+
+      if (
+        probability > 0.5 &&
+        insideBox &&
+        maskImage.data[offset + 3] === 0
+      ) {
+        maskPixelCount++;
+
+        maskImage.data[offset] = color[0];
+        maskImage.data[offset + 1] = color[1];
+        maskImage.data[offset + 2] = color[2];
+        maskImage.data[offset + 3] = 150;
       }
     }
-  });
+  }
+
+  const objectMask = createObjectMaskRecord(
+    detection,
+    probabilities,
+    protoWidth,
+    protoHeight
+  );
+
+  individualObjectMasks.push(objectMask);
+});
 
   const maskCoverage =
     (maskPixelCount / (protoWidth * protoHeight)) * 100;
