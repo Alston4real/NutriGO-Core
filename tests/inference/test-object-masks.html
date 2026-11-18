@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NutriGO Object Mask Test</title>
+</head>
+<body>
+  <h1>Individual Object Mask Test</h1>
+  <pre id="results">Running tests...</pre>
+
+  <script type="module">
+    import {
+      createBinaryMask,
+      countMaskPixels,
+      createObjectMaskRecord
+    } from "../../src/inference/object-masks.js";
+
+    const results = [];
+
+    const probabilities = new Float32Array([
+      0.9, 0.8, 0.1,
+      0.2, 0.7, 0.1,
+      0.1, 0.1, 0.95
+    ]);
+
+    const mask = createBinaryMask(
+      probabilities, 3, 3
+    );
+
+    const pixelCount = countMaskPixels(mask);
+
+    const detection = {
+      className: "chicken",
+      confidence: 0.95
+    };
+
+    const record = createObjectMaskRecord(
+      detection, probabilities, 3, 3
+    );
+
+    results.push(
+      "Binary mask: " + Array.from(mask).join(", ")
+    );
+
+    results.push(
+      "Mask pixels: " + pixelCount
+    );
+
+    results.push(
+      "Object class: " + record.className
+    );
+
+    results.push(
+      "Object confidence: " + record.confidence
+    );
+
+    results.push(
+      "Object mask pixels: " + record.maskPixelCount
+    );
+
+    results.push(
+      pixelCount === 5 && record.maskPixelCount === 5
+        ? "PASS: Individual mask processing works."
+        : "FAIL: Unexpected mask results."
+    );
+
+    document.getElementById("results").textContent =
+      results.join("\n");
+  </script>
+</body>
+</html>
