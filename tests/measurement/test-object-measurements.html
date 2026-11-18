@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NutriGO Object Measurement Test</title>
+</head>
+<body>
+  <h1>Individual Object Measurement Test</h1>
+  <pre id="results">Running tests...</pre>
+
+  <script type="module">
+    import {
+      createObjectMeasurement
+    } from "../../src/measurement/object-measurements.js";
+
+    const detection = {
+      className: "chicken",
+      confidence: 0.95,
+      x: 100,
+      y: 100,
+      width: 80,
+      height: 60
+    };
+
+    const mask = new Uint8Array([
+      1, 1, 0,
+      0, 1, 0,
+      0, 0, 1
+    ]);
+
+    const measurement = createObjectMeasurement(
+      detection,
+      mask,
+      3,
+      3
+    );
+
+    const results = [
+      "Food: " + measurement.food,
+      "Confidence: " + measurement.confidence,
+      "Bounding box width: " +
+        measurement.dimensions.widthPixels,
+      "Bounding box height: " +
+        measurement.dimensions.heightPixels,
+      "Mask pixels: " +
+        measurement.maskArea.maskPixelCount,
+      "Mask coverage: " +
+        measurement.maskArea.coveragePercent.toFixed(2) + "%",
+      measurement.maskArea.maskPixelCount === 4
+        ? "PASS: Object measurement works."
+        : "FAIL: Unexpected measurement."
+    ];
+
+    document.getElementById("results").textContent =
+      results.join("\n");
+  </script>
+</body>
+</html>
