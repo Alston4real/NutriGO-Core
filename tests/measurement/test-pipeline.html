@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NutriGO Measurement Test</title>
+</head>
+<body>
+  <h1>NutriGO Measurement Pipeline Test</h1>
+  <pre id="results">Running tests...</pre>
+
+  <script type="module">
+    import { measureFood } from
+      "../../src/measurement/food-measurement.js";
+
+    const results = document.getElementById("results");
+
+    try {
+      const rice = measureFood("rice_cooked", 100);
+      const chicken = measureFood("chicken_cooked", 100);
+
+      results.textContent =
+        "SUCCESS\n\n" +
+        "RICE:\n" +
+        JSON.stringify(rice, null, 2) +
+        "\n\nCHICKEN:\n" +
+        JSON.stringify(chicken, null, 2);
+
+    } catch (error) {
+      results.textContent =
+        "TEST FAILED:\n" + error.message;
+    }
+  </script>
+</body>
+</html>
