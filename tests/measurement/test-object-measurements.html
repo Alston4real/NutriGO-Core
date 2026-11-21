@@ -33,7 +33,9 @@
       detection,
       mask,
       3,
-      3
+      3,
+      6,
+      6
     );
 
     const results = [
@@ -45,9 +47,12 @@
         measurement.dimensions.heightPixels,
       "Mask pixels: " +
         measurement.maskArea.maskPixelCount,
+      "Model input mask pixels: " +
+        measurement.modelInputMaskPixelCount,
       "Mask coverage: " +
         measurement.maskArea.coveragePercent.toFixed(2) + "%",
-      measurement.maskArea.maskPixelCount === 4
+      measurement.maskArea.maskPixelCount === 4 &&
+      measurement.modelInputMaskPixelCount === 16
         ? "PASS: Object measurement works."
         : "FAIL: Unexpected measurement."
     ];
