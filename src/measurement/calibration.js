@@ -51,3 +51,33 @@ export function calculateAreaCm2(
 
   return areaMm2 / 100;
 }
+/**
+ * Convert segmentation mask pixels into
+ * equivalent pixels in the model input image.
+ */
+export function convertMaskAreaToImagePixels(
+  maskPixelCount,
+  maskWidth,
+  maskHeight,
+  imageWidth,
+  imageHeight
+) {
+  if (
+    !Number.isFinite(maskPixelCount) ||
+    !Number.isFinite(maskWidth) ||
+    !Number.isFinite(maskHeight) ||
+    !Number.isFinite(imageWidth) ||
+    !Number.isFinite(imageHeight) ||
+    maskPixelCount < 0 ||
+    maskWidth <= 0 ||
+    maskHeight <= 0 ||
+    imageWidth <= 0 ||
+    imageHeight <= 0
+  ) {
+    throw new Error("Invalid mask or image dimensions.");
+  }
+
+  return maskPixelCount *
+    (imageWidth / maskWidth) *
+    (imageHeight / maskHeight);
+}
