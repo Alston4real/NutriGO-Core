@@ -83,11 +83,20 @@ export function createObjectMeasurement(
     maskHeight
   );
 
+  const modelInputMaskPixelCount =
+    convertMaskAreaToImagePixels(
+      maskArea.maskPixelCount,
+      maskWidth,
+      maskHeight,
+      imageWidth,
+      imageHeight
+    );
+
   return {
     food: detection.className,
     confidence: detection.confidence,
     dimensions,
-    maskArea
+    maskArea,
     modelInputMaskPixelCount
   };
 }
