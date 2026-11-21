@@ -14,7 +14,8 @@
       calculatePixelScale,
       pixelsToMillimetres,
       calculateReferenceScale,
-      calculateAreaCm2
+      calculateAreaCm2,
+      convertMaskAreaToImagePixels
     } from "../../src/measurement/calibration.js";
 
     const results = [];
@@ -42,6 +43,17 @@
     );
 
     const area = calculateAreaCm2(10000, 0.5);
+    const convertedMaskArea = convertMaskAreaToImagePixels(
+      10000,
+      160,
+      160,
+      640,
+      640
+    );
+
+results.push(
+  `Converted mask area: ${convertedMaskArea} image pixels`
+);
 
     results.push(
       `Physical area: ${area.toFixed(2)} cm²`
@@ -52,6 +64,7 @@
       Math.abs(distance - 130) < 0.001 &&
       Math.abs(reference.horizontal - 1.3) < 0.001 &&
       Math.abs(reference.vertical - 1.3) < 0.001 &&
+      Math.abs(convertedMaskArea - 160000) < 0.001 &&
       Math.abs(area - 25) < 0.001;
 
     results.push(
