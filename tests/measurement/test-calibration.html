@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NutriGO Calibration Test</title>
+</head>
+<body>
+  <h1>Camera Calibration Test</h1>
+  <pre id="results">Running tests...</pre>
+
+  <script type="module">
+    import {
+      calculatePixelScale,
+      pixelsToMillimetres,
+      calculateReferenceScale,
+      calculateAreaCm2
+    } from "../../src/measurement/calibration.js";
+
+    const results = [];
+
+    const scale = calculatePixelScale(200, 260);
+    results.push(
+      `Scale: ${scale.toFixed(2)} mm/pixel`
+    );
+
+    const distance = pixelsToMillimetres(100, scale);
+    results.push(
+      `100 pixels: ${distance.toFixed(2)} mm`
+    );
+
+    const reference = calculateReferenceScale(
+      200, 100, 260, 130
+    );
+
+    results.push(
+      `Horizontal scale: ${reference.horizontal.toFixed(2)}`
+    );
+
+    results.push(
+      `Vertical scale: ${reference.vertical.toFixed(2)}`
+    );
+
+    const area = calculateAreaCm2(10000, 0.5);
+
+    results.push(
+      `Physical area: ${area.toFixed(2)} cm²`
+    );
+
+    const passed =
+      Math.abs(scale - 1.3) < 0.001 &&
+      Math.abs(distance - 130) < 0.001 &&
+      Math.abs(reference.horizontal - 1.3) < 0.001 &&
+      Math.abs(reference.vertical - 1.3) < 0.001 &&
+      Math.abs(area - 25) < 0.001;
+
+    results.push(
+      passed
+        ? "PASS: Calibration calculations work."
+        : "FAIL: Calibration calculations are incorrect."
+    );
+
+    document.getElementById("results").textContent =
+      results.join("\n");
+  </script>
+</body>
+</html>
