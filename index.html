@@ -424,9 +424,14 @@ const segmentationCanvas =
 if (topPredictions.length > 0) {
   const {
   createObjectMaskRecord
-  } = await import("./src/inference/object-masks.js");
+} = await import("./src/inference/object-masks.js");
 
+const {
+  createObjectMeasurement
+} = await import("./src/measurement/object-measurements.js");
+  
   const individualObjectMasks = [];
+  const individualMeasurements = [];
   const protoChannels = prototypeShape[1];
   const protoHeight = prototypeShape[2];
   const protoWidth = prototypeShape[3];
@@ -526,6 +531,14 @@ if (topPredictions.length > 0) {
   );
 
   individualObjectMasks.push(objectMask);
+const measurement = createObjectMeasurement(
+  detection,
+  objectMask.mask,
+  objectMask.maskWidth,
+  objectMask.maskHeight
+);
+
+individualMeasurements.push(measurement);
 });
 
   const maskCoverage =
