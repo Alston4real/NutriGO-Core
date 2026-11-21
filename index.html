@@ -549,6 +549,15 @@ individualMeasurements.push(measurement);
     "\nCombined mask pixels: " + maskPixelCount +
     "\nCombined mask coverage: " +
     maskCoverage.toFixed(2) + "%";
+  const measurementReport = individualMeasurements
+  .map((item, index) =>
+    `${index + 1}. ${item.food}\n` +
+    `   Confidence: ${(item.confidence * 100).toFixed(1)}%\n` +
+    `   Bounding box: ${item.dimensions.widthPixels.toFixed(1)} × ${item.dimensions.heightPixels.toFixed(1)} pixels\n` +
+    `   Mask pixels: ${item.maskArea.maskPixelCount}\n` +
+    `   Mask coverage: ${item.maskArea.coveragePercent.toFixed(2)}%`
+  )
+  .join("\n\n");
 
   protoCtx.putImageData(maskImage, 0, 0);
 
@@ -590,7 +599,9 @@ inferenceStatus.textContent =
   "RAW FOOD PREDICTIONS\n\n" +
   predictionReport +
   "\n\nCandidates above threshold: " + candidatesAboveThreshold +
-maskAreaReport;
+  maskAreaReport +
+  "\n\nINDIVIDUAL OBJECT MEASUREMENTS\n\n" +
+  measurementReport;
 
 
    
