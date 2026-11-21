@@ -1,4 +1,6 @@
-
+import {
+  convertMaskAreaToImagePixels
+} from "./calibration.js";
 /**
  * NutriGO Individual Object Measurements
  *
@@ -69,7 +71,9 @@ export function createObjectMeasurement(
   detection,
   maskData,
   maskWidth,
-  maskHeight
+  maskHeight,
+  imageWidth,
+  imageHeight
 ) {
   const dimensions = calculateObjectDimensions(detection);
 
@@ -84,6 +88,7 @@ export function createObjectMeasurement(
     confidence: detection.confidence,
     dimensions,
     maskArea
+    modelInputMaskPixelCount
   };
 }
 
